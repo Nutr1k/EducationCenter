@@ -1,4 +1,6 @@
 
+using EducationCenter.Configuration;
+
 namespace EducationCenter
 {
     public class Program
@@ -7,7 +9,9 @@ namespace EducationCenter
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers();
+			builder.AddServices();
+
+			builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
