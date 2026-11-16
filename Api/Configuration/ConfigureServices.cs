@@ -3,6 +3,9 @@ using EducationCenter.Data.Implementation;
 using EducationCenter.Models;
 using EducationCenter.Services.Abstract;
 using EducationCenter.Services.Implementation;
+using EducationCenterApi.BackgroundServices;
+using EducationCenterApi.Data.Abstract;
+using EducationCenterApi.Data.Implementation;
 
 namespace EducationCenter.Configuration;
 
@@ -14,6 +17,7 @@ public static class ServiceCollectionExtensions
 		builder.AddConfiguration();
 		builder.AddApplicationServices();
 		builder.AddInfrastructureServices();
+		builder.AddBackgroundServices();
 	}
 
 	public static void AddCommonServices(this WebApplicationBuilder builder)
@@ -33,10 +37,16 @@ public static class ServiceCollectionExtensions
 	{
 		builder.Services.AddScoped<IEmailService, EmailService>();
 		builder.Services.AddSingleton<ICourseRepository, InMemoryCourseRepository>();
+		builder.Services.AddSingleton<ILeadRepository, InMemoryLeadRepository>();
 	}
 	public static void AddConfiguration(this WebApplicationBuilder builder)
 	{
 		builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+	}
+
+	public static void AddBackgroundServices(this WebApplicationBuilder builder)
+	{
+		builder.Services.AddHostedService<PendingLeadBackgroundService>();
 	}
 }
 

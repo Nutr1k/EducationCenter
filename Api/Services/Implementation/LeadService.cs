@@ -2,6 +2,7 @@
 using EducationCenter.Enums;
 using EducationCenter.Models;
 using EducationCenter.Services.Abstract;
+using EducationCenterApi.Data.Abstract;
 using Microsoft.Extensions.Options;
 using System.Threading;
 
@@ -10,14 +11,16 @@ namespace EducationCenter.Services.Implementation;
 
 public class LeadService : ILeadService
 {
-	private readonly IEmailService _emailService;
-	private readonly EmailSettings _emailSettings;
+	private readonly IEmailService	 _emailService;
+	private readonly EmailSettings	 _emailSettings;
+	private readonly ILeadRepository _leadRepository;
 
 
-	public LeadService(IEmailService emailService, IOptions<EmailSettings> emailSettings)
+	public LeadService(IEmailService emailService, IOptions<EmailSettings> emailSettings, ILeadRepository leadRepository)
 	{
 		_emailService = emailService;
 		_emailSettings = emailSettings.Value;
+		_leadRepository = leadRepository;
 	}
 
 	public async Task CreateAsync(CreateLeadRequest request, CancellationToken cancellationToken)
@@ -27,7 +30,8 @@ public class LeadService : ILeadService
 			Name = request.Name,
 			Phone = request.Phone,
 			Email = request.Email,
-			ClientType = request.ClientType
+			ClientType = request.ClientType,
+			CreatedAt = DateTime.UtcNow
 		};
 
 		try
@@ -43,10 +47,17 @@ public class LeadService : ILeadService
 				_ => throw new ArgumentOutOfRangeException(nameof(request.ClientType))
 			};
 
-			await _emailService.SendFallbackAsync(
-				fallbackEmail,
-				lead,
-				cancellationToken);
+			try
+			{
+				await _emailService.SendFallbackAsync(
+					fallbackEmail,
+					lead,
+					cancellationToken);
+			}
+			catch (Exception) when (!cancellationToken.IsCancellationRequested)
+			{
+				await _leadRepository.SaveAsync(lead, cancellationToken);
+			}
 		}
 	}
 }

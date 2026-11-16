@@ -1,4 +1,5 @@
 ﻿using EducationCenter.Enums;
+using EducationCenterApi.Enums;
 
 namespace EducationCenter.Models;
 
@@ -13,4 +14,8 @@ public class Lead
 	public string Email { get; set; } = string.Empty;
 
 	public ClientType ClientType { get; set; }
+
+
+	public LeadStatus Status { get; set; }
+	public DateTime CreatedAt { get; set; }
 }
