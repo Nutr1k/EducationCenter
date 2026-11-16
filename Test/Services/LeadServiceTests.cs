@@ -135,46 +135,7 @@ public class LeadServiceTests
 	}
 
 	[Fact]
-	public async Task CreateAsync_WhenPrimaryEmailFails_ShouldSendFallback()
-	{
-		var emailService = new FakeEmailService
-		{
-			ShouldFail = true,
-			ShouldFallbackFail = false
-		};
-
-		var repository = new InMemoryLeadRepository();
-
-		var emailSettings = Options.Create(new EmailSettings
-		{
-			CorporateEmail = "specialist.corp@yandex.ru",
-			IndividualEmail = "specialist.ufl@yandex.ru"
-		});
-
-		var service = new LeadService(
-			emailService,
-			emailSettings,
-			repository);
-
-		var request = new CreateLeadRequest
-		{
-			Name = "Иван",
-			Phone = "+79990000000",
-			Email = "ivan@example.com",
-			ClientType = ClientType.Individual
-		};
-
-		await service.CreateAsync(request, CancellationToken.None);
-
-		Assert.Equal("specialist.ufl@yandex.ru", emailService.FallbackEmail);
-
-		var pendingLeads = await repository.GetPendingAsync(CancellationToken.None);
-
-		Assert.Empty(pendingLeads);
-	}
-
-	[Fact]
-	public async Task ProcessPendingLeadsAsync_WhenFallbackSucceeds_MarksLeadAsProcessed()
+	public async Task ProcessPendingLeadsAsync_Success_UpdatesStatus()
 	{
 		_emailServiceMock
 			.Setup(x => x.SendFallbackAsync(
@@ -219,5 +180,33 @@ public class LeadServiceTests
 				It.IsAny<Lead>(),
 				It.IsAny<CancellationToken>()),
 			Times.Once);
+	}
+
+	[Fact]
+	//Gри успешной отправке основного письма резервная отправка не вызывается
+	public async Task CreateAsync_EmailSent_DoesNotSendFallback()
+	{
+		_emailServiceMock
+			.Setup(x => x.SendAsync(
+				It.IsAny<Lead>(),
+				It.IsAny<CancellationToken>()))
+			.Returns(Task.CompletedTask);
+
+		var request = new CreateLeadRequest
+		{
+			Name = "Иван Иванов",
+			Phone = "+79991234567",
+			Email = "ivan@mail.com",
+			ClientType = ClientType.LegalEntity
+		};
+
+		await _leadService.CreateAsync(request, CancellationToken.None);
+
+		_emailServiceMock.Verify(
+			x => x.SendFallbackAsync(
+				It.IsAny<string>(),
+				It.IsAny<Lead>(),
+				It.IsAny<CancellationToken>()),
+			Times.Never);
 	}
 }

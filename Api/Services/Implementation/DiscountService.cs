@@ -1,24 +1,36 @@
-﻿using EducationCenter.DTO;
+﻿using EducationCenter.Data.Abstract;
+using EducationCenter.DTO;
 using EducationCenter.Models;
 using EducationCenter.Services.Abstract;
+using System.Threading;
 
 namespace EducationCenter.Services.Implementation;
 
 public class DiscountService : IDiscountService
 {
-	public decimal CalculateTotal(CalculateDiscountRequest request)
+	private readonly ICourseRepository _courseRepository;
+	private readonly TimeProvider _timeProvider;
+
+	public DiscountService(ICourseRepository courseRepository, TimeProvider timeProvider)
+	{
+		_courseRepository = courseRepository;
+		_timeProvider = timeProvider;
+	}
+
+	public async Task<decimal> CalculateTotalAsync(CalculateDiscountRequest request)
 	{
 		decimal total = 0;
-		var now = DateTime.Now;
-		
-		var courses = request.Courses.Select(course => new Course
-		{
-			Id = course.Id,
-			Name = course.Name,
-			Price = course.Price,
-			StartDate = course.StartDate
-		});
 
+		var now = _timeProvider.GetLocalNow().DateTime;
+
+		var courseIds = request.Courses
+			.Select(x => x.Id)
+			.ToList();
+
+		var courses = await _courseRepository.GetByIdsAsync(courseIds);
+		
+		if (courses.Count != courseIds.Distinct().Count())
+			throw new InvalidOperationException("Некоторые курсы не найдены.");
 
 		foreach (var course in courses)
 		{
@@ -43,5 +55,6 @@ public class DiscountService : IDiscountService
 
 		return total;
 	}
+
 }
 

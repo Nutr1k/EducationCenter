@@ -39,6 +39,15 @@ public class InMemoryCourseRepository : ICourseRepository
 
 	public Task<List<Course>> GetAllAsync()
 	{
-		return Task.FromResult(_courses);
+		return Task.FromResult(_courses.ToList());
+	}
+
+	public Task<List<Course>> GetByIdsAsync(IEnumerable<int> ids)
+	{
+		var courses = _courses
+			.Where(x => ids.Contains(x.Id))
+			.ToList();
+
+		return Task.FromResult(courses);
 	}
 }

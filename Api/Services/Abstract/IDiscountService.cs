@@ -4,6 +4,6 @@ namespace EducationCenter.Services.Abstract
 {
 	public interface IDiscountService
 	{
-		decimal CalculateTotal(CalculateDiscountRequest request);
+		Task<decimal> CalculateTotalAsync(CalculateDiscountRequest request);
 	}
 }

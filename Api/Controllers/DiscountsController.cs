@@ -29,7 +29,7 @@ public class DiscountsController : ControllerBase
 	[HttpPost("calculate")]
 	public IActionResult Calculate([FromBody] CalculateDiscountRequest request)
 	{
-		var total = _discountService.CalculateTotal(request);
+		var total = _discountService.CalculateTotalAsync(request);
 
 		return Ok(new
 		{

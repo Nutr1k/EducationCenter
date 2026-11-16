@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
 		builder.Services.AddControllers();
 		builder.Services.AddEndpointsApiExplorer();
 		builder.Services.AddSwaggerGen();
+		builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 	}
 
 	public static void AddApplicationServices(this WebApplicationBuilder builder)
